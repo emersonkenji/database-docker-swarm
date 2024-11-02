@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  database:
+    image: mariadb:latest
+    command:
+      [
+        --character-set-server=utf8mb4,
+        --collation-server=utf8mb4_general_ci,
+        --sql-mode=,
+        --default-authentication-plugin=mysql_native_password,
+        --max-allowed-packet=512MB,
+        --port=3306,
+      ]
+    ports:
+      - 3306:3306
+    networks:
+      - network_public
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "Ken172ji"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+  phpmyadmin:
+    image: phpmyadmin:latest
+    networks:
+      - network_public
+      - proxy
+    ports:
+      - 8081:80
+    environment:
+      PMA_HOSTS: database
+      PMA_ARBITRARY: 0
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+volumes:
+  database:
+    external: true
+networks:
+  network_public:
+    external: true
+  proxy:
+    external: true
